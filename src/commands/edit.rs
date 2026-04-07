@@ -1,5 +1,5 @@
 use crate::config::RepoConfig;
-use crate::utils::{check_initialized, expand_path, find_editor};
+use crate::utils::{check_initialized, find_editor};
 
 pub fn execute(software_name: &str) -> Result<(), String> {
     let user_config = check_initialized()?;
@@ -22,26 +22,22 @@ pub fn execute(software_name: &str) -> Result<(), String> {
         .get(software_name)
         .ok_or_else(|| format!("未找到软件配置: {}", software_name))?;
 
-    let config_path = software
-        .get_config_path()
-        .ok_or_else(|| format!("未配置 {} 的路径", software_name))?;
+    // 使用仓库路径
+    let repo_path = std::path::PathBuf::from(&user_config.target_path).join(&software.repo_path);
 
-    let expanded_path = expand_path(&config_path);
-    let path = std::path::Path::new(&expanded_path);
-
-    if !path.exists() {
-        return Err(format!("配置目录不存在: {}", expanded_path));
+    if !repo_path.exists() {
+        return Err(format!("仓库路径不存在: {}", repo_path.display()));
     }
 
     // 查找编辑器
     let editor = find_editor(user_config.editor.as_deref())
         .ok_or_else(|| "未找到可用的编辑器 (zed, code, nvim, vim, vi)".to_string())?;
 
-    println!("使用 {} 打开 {}", editor, expanded_path);
+    println!("使用 {} 打开 {}", editor, repo_path.display());
 
     // 打开编辑器
     let status = std::process::Command::new(&editor)
-        .arg(&expanded_path)
+        .arg(&repo_path)
         .status()
         .map_err(|e| format!("启动编辑器失败: {}", e))?;
 
