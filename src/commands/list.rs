@@ -1,20 +1,9 @@
-use crate::config::RepoConfig;
-use crate::utils::{check_initialized, expand_path};
+use crate::config::{RepoConfig, UserConfig};
+use crate::utils::expand_path;
 
 pub fn execute() -> Result<(), String> {
-    let user_config = check_initialized()?;
-
-    // 读取仓库配置
-    let config_path = std::path::PathBuf::from(&user_config.target_path).join("cfm.toml");
-    if !config_path.exists() {
-        return Err("仓库中未找到 cfm.toml 配置文件".to_string());
-    }
-
-    let config_content =
-        std::fs::read_to_string(&config_path).map_err(|e| format!("读取配置文件失败: {}", e))?;
-
-    let repo_config: RepoConfig =
-        toml::from_str(&config_content).map_err(|e| format!("解析配置文件失败: {}", e))?;
+    let user_config = UserConfig::load()?;
+    let repo_config = RepoConfig::from_user_cfg(&user_config)?;
 
     let target_path = std::path::Path::new(&user_config.target_path);
     print_software_list(&repo_config, target_path);

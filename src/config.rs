@@ -66,6 +66,24 @@ pub struct RepoConfig {
     pub software: HashMap<String, SoftwareConfig>,
 }
 
+impl RepoConfig {
+    pub fn from_user_cfg_file() -> Result<Self, String> {
+        let user_cfg = UserConfig::load()?;
+        Self::from_user_cfg(&user_cfg)
+    }
+
+    pub fn from_user_cfg(user_cfg: &UserConfig) -> Result<Self, String> {
+        let target_path = std::path::Path::new(&user_cfg.target_path);
+        let config_path = target_path.join("cfm.toml");
+        if !config_path.exists() {
+            return Err("仓库中未找到 cfm.toml 配置文件".to_string());
+        }
+        let config_content = std::fs::read_to_string(&config_path)
+            .map_err(|e| format!("读取配置文件失败: {}", e))?;
+        toml::from_str(&config_content).map_err(|e| format!("解析配置文件失败: {}", e))
+    }
+}
+
 /// 用户配置文件
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct UserConfig {

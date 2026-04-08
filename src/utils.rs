@@ -41,11 +41,6 @@ pub fn path_buf_from_str(path: &str) -> PathBuf {
     PathBuf::from(expand_path(path))
 }
 
-/// 检查是否已初始化
-pub fn check_initialized() -> Result<super::config::UserConfig, String> {
-    super::config::UserConfig::load()
-}
-
 /// 查找可用的编辑器
 pub fn find_editor(configured_editor: Option<&str>) -> Option<String> {
     // 如果配置了编辑器，直接使用
