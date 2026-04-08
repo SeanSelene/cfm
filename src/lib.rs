@@ -6,7 +6,7 @@ pub mod commands;
 pub mod config;
 mod utils;
 
-pub use commands::{clean, edit, list, load, pull, push};
+pub use commands::{clean, edit, list, load};
 
 use clap::{Parser, Subcommand};
 
@@ -39,14 +39,6 @@ enum Commands {
     /// 列出所有已配置的软件
     #[command(alias = "ls")]
     List,
-    /// 拉取仓库更新并重新创建链接
-    Pull,
-    /// 推送配置到仓库
-    Push {
-        /// 只推送指定软件的配置
-        #[arg(short, long)]
-        software: Option<String>,
-    },
     /// 清理所有创建的链接、复制的文件、克隆目录和配置文件
     Clean {
         /// 跳过确认提示
@@ -79,8 +71,6 @@ pub fn run() -> Result<(), String> {
         } => load(&repo_url, target_path.as_deref()),
         Commands::Edit { software } => edit(&software),
         Commands::List => list(),
-        Commands::Pull => pull(),
-        Commands::Push { software } => push(software.as_deref()),
         Commands::Clean { force } => clean(force),
         Commands::Version => {
             println!("cfm {}", env!("CARGO_PKG_VERSION"));
