@@ -1,6 +1,5 @@
 use crate::config::{RepoConfig, UserConfig};
-use crate::utils::{expand_path, remove_link_target};
-use std::io::{self, Write};
+use crate::utils::{self, remove_link_target};
 
 pub fn execute(force: bool) -> Result<(), String> {
     let user_config = UserConfig::load()?;
@@ -8,16 +7,7 @@ pub fn execute(force: bool) -> Result<(), String> {
     let target_path = std::path::Path::new(&user_config.target_path);
 
     // 收集要删除的路径
-    let mut paths_to_delete: Vec<(String, std::path::PathBuf)> = Vec::new();
-
-    for (name, software) in &repo_config.software {
-        if let Some(config_path) = software.get_config_path() {
-            let path = std::path::PathBuf::from(expand_path(&config_path));
-            if path.exists() || path.symlink_metadata().is_ok() {
-                paths_to_delete.push((name.clone(), path));
-            }
-        }
-    }
+    let mut paths_to_delete = repo_config.get_apply_files();
 
     // 添加克隆目录
     if target_path.exists() {
@@ -43,22 +33,8 @@ pub fn execute(force: bool) -> Result<(), String> {
     println!();
 
     // 确认删除
-    if !force {
-        print!("确认删除? [y/N] ");
-        io::stdout()
-            .flush()
-            .map_err(|e| format!("刷新输出失败: {}", e))?;
-
-        let mut input = String::new();
-        io::stdin()
-            .read_line(&mut input)
-            .map_err(|e| format!("读取输入失败: {}", e))?;
-
-        let input = input.trim().to_lowercase();
-        if input != "y" && input != "yes" {
-            println!("已取消");
-            return Ok(());
-        }
+    if !force && utils::confirm("确定删除").is_err() {
+        return Ok(());
     }
 
     // 执行删除

@@ -1,3 +1,4 @@
+use std::io::{self, Write};
 use std::path::PathBuf;
 
 /// 展开路径中的环境变量和 ~
@@ -74,6 +75,7 @@ pub fn symlink_file<P: AsRef<std::path::Path>, Q: AsRef<std::path::Path>>(
 
 #[cfg(unix)]
 pub use std::fs::hard_link;
+
 
 #[cfg(windows)]
 pub fn hard_link<P: AsRef<std::path::Path>, Q: AsRef<std::path::Path>>(
@@ -200,5 +202,28 @@ fn copy_dir_all(src: &std::path::Path, dst: &std::path::Path) -> Result<(), Stri
         }
     }
 
+    Ok(())
+}
+
+pub fn is_git_repo(path: &str) -> bool {
+    let starts = ["git@", "http://", "https://", "ssh://", "git://"];
+    starts.iter().any(|s| path.starts_with(s))
+}
+
+pub fn confirm(tip: &str) -> Result<(), String> {
+    print!("{tip}? [y/N] ");
+    io::stdout()
+        .flush()
+        .map_err(|e| format!("刷新输出失败: {}", e))?;
+
+    let mut input = String::new();
+    io::stdin()
+        .read_line(&mut input)
+        .map_err(|e| format!("读取输入失败: {}", e))?;
+
+    let input = input.trim().to_lowercase();
+    if input != "y" && input != "yes" {
+        return Err("已取消".into());
+    };
     Ok(())
 }

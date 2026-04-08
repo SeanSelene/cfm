@@ -1,5 +1,10 @@
 use serde::{Deserialize, Serialize};
-use std::collections::HashMap;
+use std::{
+    collections::HashMap,
+    path::{self, PathBuf},
+};
+
+use crate::utils::expand_path;
 
 /// 链接模式
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize, Default)]
@@ -82,13 +87,26 @@ impl RepoConfig {
             .map_err(|e| format!("读取配置文件失败: {}", e))?;
         toml::from_str(&config_content).map_err(|e| format!("解析配置文件失败: {}", e))
     }
+
+    pub fn get_apply_files(&self) -> Vec<(String, path::PathBuf)> {
+        self.software
+            .iter()
+            .filter_map(|(name, sw)| {
+                let config_path = sw.get_config_path()?;
+                let path = PathBuf::from(expand_path(&config_path));
+                println!(
+                    "get_apply_files: {name:?}, {config_path:?}, {:?}",
+                    path.symlink_metadata()
+                );
+                path.symlink_metadata().ok().map(|_| (name.clone(), path))
+            })
+            .collect()
+    }
 }
 
 /// 用户配置文件
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct UserConfig {
-    /// 仓库目录
-    pub repo_dir: String,
     /// 目标路径
     pub target_path: String,
     /// 编辑器
