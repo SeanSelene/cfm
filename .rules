@@ -1,6 +1,6 @@
-# 项目简介
+# cfm - Config File Manager
 
-cfm (Config File Manager) 是一个跨平台配置文件管理工具，通过 Git 仓库统一管理各类软件的配置文件。
+跨平台配置文件管理工具，统一管理各类软件的配置文件，可以从本地目录或者远程仓库加载配置。
 
 ## 技术方案
 
@@ -9,22 +9,41 @@ cfm (Config File Manager) 是一个跨平台配置文件管理工具，通过 Gi
 - **配置格式**: TOML (serde 序列化)
 - **支持平台**: Windows、Linux、macOS
 
-### 链接模式
+## 链接模式
 
-- `soft` - 软链接（符号链接）
-- `hard` - 硬链接
-- `cp` - 复制文件
+| 模式 | 说明 |
+|------|------|
+| `soft` | 软链接（Windows 目录使用 Junction，无需管理员权限） |
+| `hard` | 硬链接（仅支持文件） |
+| `cp` | 复制文件 |
 
-### 配置文件
+## 路径配置优先级
 
-- 用户配置: `{config_dir}/cfm/config.toml`
-- 仓库配置: 仓库根目录的 `cfm.toml`
+- macOS: `config_path_mac` > `config_path_unix` > `config_path`
+- Linux: `config_path_unix` > `config_path`
+- Windows: `config_path_win` > `config_path`
+
+## 仓库配置示例 (cfm.toml)
+
+```toml
+[nvim]
+repo_path = "nvim"
+link_mode = "soft"
+config_path_unix = "~/.config/nvim"
+config_path_win = "{APPDATA}/nvim"
+
+[starship]
+repo_path = "starship/starship.toml"
+link_mode = "hard"
+config_path = "~/.config/starship.toml"
+```
 
 ---
 
-# 代码质量
+## 开发规范
 
-每次修改后，执行以下命令：
-
+每次修改后执行：
 1. `cargo clippy` - 检查并修复所有错误，尽量修复警告
 2. `cargo fmt` - 格式化改动的代码
+
+---
