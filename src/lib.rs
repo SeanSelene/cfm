@@ -6,7 +6,7 @@ pub mod commands;
 pub mod config;
 mod utils;
 
-pub use commands::{clean, edit, init, list, pull, push};
+pub use commands::{clean, edit, list, load, pull, push};
 
 use clap::{Parser, Subcommand};
 
@@ -25,7 +25,7 @@ struct Cli {
 #[derive(Subcommand)]
 enum Commands {
     /// 初始化配置，克隆仓库并创建链接
-    Init {
+    Load {
         /// Git 仓库地址
         repo: String,
         /// 目标路径（默认：~/{仓库名}）
@@ -73,10 +73,10 @@ pub fn run() -> Result<(), String> {
     };
 
     match command {
-        Commands::Init {
+        Commands::Load {
             repo: repo_url,
             target_path,
-        } => init(&repo_url, target_path.as_deref()),
+        } => load(&repo_url, target_path.as_deref()),
         Commands::Edit { software } => edit(&software),
         Commands::List => list(),
         Commands::Pull => pull(),

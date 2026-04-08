@@ -26,10 +26,10 @@ cfm -v
 cfm version
 ```
 
-### 初始化
+### 加载配置 (初始化)
 
 ```bash
-cfm init <repo_url> [target_path]
+cfm load <repo_url> [target_path]
 ```
 
 克隆配置仓库并创建链接。`target_path` 默认为 `~/{仓库名}`。
@@ -99,22 +99,22 @@ config_path_win = "{APPDATA}/Zed"
 
 ### 配置项说明
 
-| 字段 | 说明 |
-|------|------|
-| `repo_path` | 配置文件在仓库中的相对路径 |
-| `link_mode` | 链接模式：`soft`(软链接)、`hard`(硬链接)、`cp`(复制) |
-| `config_path` | 通用配置路径 |
-| `config_path_unix` | Unix 系统配置路径 |
-| `config_path_win` | Windows 配置路径 |
-| `config_path_mac` | macOS 配置路径 |
+| 字段               | 说明                                                 |
+| ------------------ | ---------------------------------------------------- |
+| `repo_path`        | 配置文件在仓库中的相对路径                           |
+| `link_mode`        | 链接模式：`soft`(软链接)、`hard`(硬链接)、`cp`(复制) |
+| `config_path`      | 通用配置路径                                         |
+| `config_path_unix` | Unix 系统配置路径                                    |
+| `config_path_win`  | Windows 配置路径                                     |
+| `config_path_mac`  | macOS 配置路径                                       |
 
 ### 链接模式
 
-| 模式 | 说明 |
-|------|------|
+| 模式   | 说明                                                |
+| ------ | --------------------------------------------------- |
 | `soft` | 软链接，Windows 目录使用 Junction（无需管理员权限） |
-| `hard` | 硬链接，仅支持文件 |
-| `cp` | 复制文件，适合不支持链接的场景 |
+| `hard` | 硬链接，仅支持文件                                  |
+| `cp`   | 复制文件，适合不支持链接的场景                      |
 
 ### 环境变量
 
