@@ -73,10 +73,7 @@ pub fn run() -> Result<(), String> {
     };
 
     match command {
-        Commands::Load {
-            repo: repo_url,
-            target_path,
-        } => load(&repo_url, target_path.as_deref()),
+        Commands::Load { repo: repo_url, target_path } => load(&repo_url, target_path.as_deref()),
         Commands::Edit { software } => edit(&software),
         Commands::List => list(),
         Commands::Clean { force } => clean(force),

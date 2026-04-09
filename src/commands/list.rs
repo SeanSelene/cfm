@@ -34,10 +34,8 @@ pub fn print_software_list(repo_config: &RepoConfig, target_path: &std::path::Pa
         let src = target_path.join(&software.repo_path);
         let status = if src.exists() { "✓" } else { "✗" };
 
-        let config_path = software
-            .get_config_path()
-            .map(|p| expand_path(&p))
-            .unwrap_or_else(|| "-".to_string());
+        let config_path =
+            software.get_config_path().map(|p| expand_path(&p)).unwrap_or_else(|| "-".to_string());
 
         let row = vec![
             name.clone(),
@@ -62,10 +60,7 @@ pub fn print_software_list(repo_config: &RepoConfig, target_path: &std::path::Pa
     print_border(&col_widths, '╭', '┬', '╮', '─');
 
     // 表头
-    print_row(
-        &headers.iter().map(|s| s.to_string()).collect::<Vec<_>>(),
-        &col_widths,
-    );
+    print_row(&headers.iter().map(|s| s.to_string()).collect::<Vec<_>>(), &col_widths);
     print_border(&col_widths, '├', '┼', '┤', '─');
 
     // 数据行

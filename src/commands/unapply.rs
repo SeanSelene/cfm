@@ -28,11 +28,7 @@ pub fn execute(names: Option<HashSet<String>>, force: bool) -> Result<(), String
     }
     // 执行删除
     for (_name, p) in &paths_to_delete {
-        match if p.is_dir() {
-            fs::remove_dir_all(p)
-        } else {
-            fs::remove_file(p)
-        } {
+        match if p.is_dir() { fs::remove_dir_all(p) } else { fs::remove_file(p) } {
             Ok(()) => println!("已删除: {}", p.display()),
             Err(e) => println!("删除 {} 失败: {}", p.display(), e),
         };

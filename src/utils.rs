@@ -137,9 +137,7 @@ fn copy_dir_all(src: &std::path::Path, dst: &std::path::Path) -> Result<(), Stri
 
     for entry in std::fs::read_dir(src).map_err(|e| format!("读取目录失败: {}", e))? {
         let entry = entry.map_err(|e| format!("读取条目失败: {}", e))?;
-        let ty = entry
-            .file_type()
-            .map_err(|e| format!("获取文件类型失败: {}", e))?;
+        let ty = entry.file_type().map_err(|e| format!("获取文件类型失败: {}", e))?;
         let src_path = entry.path();
         let dst_path = dst.join(entry.file_name());
 
@@ -160,14 +158,10 @@ pub fn is_git_repo(path: &str) -> bool {
 
 pub fn confirm(tip: &str) -> Result<(), String> {
     print!("{tip}? [y/N] ");
-    io::stdout()
-        .flush()
-        .map_err(|e| format!("刷新输出失败: {}", e))?;
+    io::stdout().flush().map_err(|e| format!("刷新输出失败: {}", e))?;
 
     let mut input = String::new();
-    io::stdin()
-        .read_line(&mut input)
-        .map_err(|e| format!("读取输入失败: {}", e))?;
+    io::stdin().read_line(&mut input).map_err(|e| format!("读取输入失败: {}", e))?;
 
     let input = input.trim().to_lowercase();
     if input != "y" && input != "yes" {

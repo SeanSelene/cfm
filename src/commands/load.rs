@@ -90,20 +90,14 @@ pub fn execute(repo_url: &str, target_path: Option<&str>) -> Result<(), String> 
     }
 
     // 保存用户配置
-    let user_config = UserConfig {
-        target_path: configs_dir.clone(),
-        editor: None,
-    };
+    let user_config = UserConfig { target_path: configs_dir.clone(), editor: None };
 
     user_config.save()?;
 
     // 显示软件列表
     print_software_list(&repo_config, configs_path);
 
-    println!(
-        "\n初始化完成，配置已保存到 {}",
-        UserConfig::config_path().display()
-    );
+    println!("\n初始化完成，配置已保存到 {}", UserConfig::config_path().display());
 
     Ok(())
 }
