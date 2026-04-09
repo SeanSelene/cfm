@@ -1,3 +1,4 @@
+use std::fs;
 use std::io::{self, Write};
 use std::path::PathBuf;
 
@@ -9,12 +10,6 @@ pub fn expand_path(input: &str) -> String {
     } else {
         expanded.into_owned()
     }
-}
-
-/// 将路径转换为 PathBuf
-#[allow(dead_code)]
-pub fn path_buf_from_str(path: &str) -> PathBuf {
-    PathBuf::from(expand_path(path))
 }
 
 /// 查找可用的编辑器
@@ -37,28 +32,6 @@ pub fn find_editor(configured_editor: Option<&str>) -> Option<String> {
     None
 }
 
-#[cfg(unix)]
-pub use std::os::unix::fs::symlink as symlink_file;
-
-#[cfg(windows)]
-pub fn symlink_file<P: AsRef<std::path::Path>, Q: AsRef<std::path::Path>>(
-    original: P,
-    link: Q,
-) -> std::io::Result<()> {
-    std::os::windows::fs::symlink_file(original, link)
-}
-
-#[cfg(unix)]
-pub use std::fs::hard_link;
-
-#[cfg(windows)]
-pub fn hard_link<P: AsRef<std::path::Path>, Q: AsRef<std::path::Path>>(
-    original: P,
-    link: Q,
-) -> std::io::Result<()> {
-    std::fs::hard_link(original, link)
-}
-
 /// 创建软链接
 pub fn create_soft_link(src: &std::path::Path, dst: &std::path::Path) -> Result<(), String> {
     // 如果目标已存在，先删除
@@ -77,13 +50,14 @@ pub fn create_soft_link(src: &std::path::Path, dst: &std::path::Path) -> Result<
         if src.is_dir() {
             junction::create(src, dst).map_err(|e| format!("创建目录连接失败: {}", e))
         } else {
-            symlink_file(src, dst).map_err(|e| format!("创建文件软链接失败: {}", e))
+            use std::os::windows;
+            windows::fs::symlink_file(src, dst).map_err(|e| format!("创建文件软链接失败: {}", e))
         }
     }
 
     #[cfg(not(windows))]
     {
-        symlink_file(src, dst).map_err(|e| format!("创建软链接失败: {}", e))
+        std::os::unix::fs::symlink(src, dst).map_err(|e| format!("创建软链接失败: {}", e))
     }
 }
 
@@ -128,7 +102,7 @@ pub fn create_hard_link(src: &std::path::Path, dst: &std::path::Path) -> Result<
         std::fs::create_dir_all(parent).map_err(|e| format!("创建目录失败: {}", e))?;
     }
 
-    hard_link(src, dst).map_err(|e| format!("创建硬链接失败: {}", e))
+    fs::hard_link(src, dst).map_err(|e| format!("创建硬链接失败: {}", e))
 }
 
 /// 复制文件或目录
