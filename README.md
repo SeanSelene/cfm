@@ -118,7 +118,7 @@ config_path_win = "{APPDATA}/Zed"
 
 ### 环境变量
 
-支持在路径中使用环境变量：`{APPDATA}`, `{HOME}`, `{USERPROFILE}` 等
+支持在路径中使用环境变量：`$APPDATA`, `$HOME`, `$USERPROFILE` 等
 
 ## 许可证
 

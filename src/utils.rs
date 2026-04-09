@@ -2,38 +2,13 @@ use std::io::{self, Write};
 use std::path::PathBuf;
 
 /// 展开路径中的环境变量和 ~
-pub fn expand_path(path: &str) -> String {
-    let mut result = path.to_string();
-
-    // 展开环境变量 {VAR}
-    while let Some(start) = result.find('{') {
-        if let Some(end) = result[start..].find('}') {
-            let var_name = &result[start + 1..start + end];
-            if let Ok(value) = std::env::var(var_name) {
-                result = format!(
-                    "{}{}{}",
-                    &result[..start],
-                    value,
-                    &result[start + end + 1..]
-                );
-            } else {
-                break;
-            }
-        } else {
-            break;
-        }
+pub fn expand_path(input: &str) -> String {
+    let expanded = shellexpand::full(input).unwrap_or_else(|_| input.into());
+    if cfg!(windows) && expanded.contains('/') {
+        expanded.replace("/", "\\")
+    } else {
+        expanded.into_owned()
     }
-
-    // 展开路径
-    // 在 Windows 上处理路径分隔符
-    #[cfg(windows)]
-    {
-        result = result.replace('/', "\\");
-    }
-
-    // 使用 shellexpand 展开 ~ 和环境变量
-    let expanded = shellexpand::full(&result).unwrap_or_else(|_| result.clone().into());
-    expanded.into_owned()
 }
 
 /// 将路径转换为 PathBuf
@@ -75,7 +50,6 @@ pub fn symlink_file<P: AsRef<std::path::Path>, Q: AsRef<std::path::Path>>(
 
 #[cfg(unix)]
 pub use std::fs::hard_link;
-
 
 #[cfg(windows)]
 pub fn hard_link<P: AsRef<std::path::Path>, Q: AsRef<std::path::Path>>(
