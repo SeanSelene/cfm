@@ -222,7 +222,7 @@ impl UserConfig {
         {
             let mut path =
                 dirs::config_dir().unwrap_or_else(|| std::path::PathBuf::from("%AppData%"));
-            path.push("cfm/config.toml");
+            path.push("cfm\\config.toml");
             path
         }
     }

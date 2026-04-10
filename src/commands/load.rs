@@ -1,4 +1,4 @@
-use super::{apply::apply, list::print_software_list};
+use super::apply::apply;
 use crate::config::{RepoConfig, UserConfig};
 use crate::utils::{self, expand_path};
 
