@@ -6,7 +6,7 @@ pub mod commands;
 pub mod config;
 mod utils;
 
-pub use commands::{clean, edit, list, load, unapply};
+pub use commands::{apply, clean, edit, list, load, unapply};
 
 use clap::{Parser, Subcommand};
 
@@ -47,6 +47,10 @@ enum Commands {
     },
     /// 显示版本信息
     Version,
+    Apply {
+        /// 软件名称
+        software: Option<Vec<String>>,
+    },
     /// 删除创建的链接、复制的文件
     Unapply {
         /// 软件名称
@@ -81,6 +85,7 @@ pub fn run() -> Result<(), String> {
             println!("cfm {}", env!("CARGO_PKG_VERSION"));
             Ok(())
         }
+        Commands::Apply { software } => apply(software),
         Commands::Unapply { software, force } => {
             unapply(software.map(|v| v.into_iter().collect()), force)
         }

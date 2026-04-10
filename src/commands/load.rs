@@ -10,10 +10,10 @@ fn extract_repo_name(url: &str) -> String {
     url.rsplit('/').next().unwrap_or(url).to_string()
 }
 
-pub fn execute(repo_url: &str, target_path: Option<&str>) -> Result<(), String> {
+pub fn execute(repo_url: &str, repo_path: Option<&str>) -> Result<(), String> {
     let is_repo = utils::is_git_repo(repo_url);
-    // 获取配置文件夹
-    let configs_dir = match target_path {
+    // 获取目标文件夹 (dotfiles 本地路径或者仓库克隆下来要保存的路径)
+    let repo_path = match repo_path {
         // 有第二个参数说明是 clone 的情况
         Some(path) => {
             if !is_repo {
@@ -32,23 +32,23 @@ pub fn execute(repo_url: &str, target_path: Option<&str>) -> Result<(), String> 
             }
         }
     };
-    let configs_path = std::path::Path::new(&configs_dir);
+    let configs_path = std::path::Path::new(&repo_path);
     if is_repo {
-        println!("克隆仓库 {} 到 {}\n", repo_url, configs_dir);
+        println!("正在克隆 {} 到 {}\n", repo_url, repo_path);
         // 检查目标目录是否已存在
         if configs_path.exists() {
-            return Err(format!("目标目录已存在: {}", configs_dir));
+            return Err(format!("目标目录已存在: {}", repo_path));
         }
         // 克隆仓库
         let status = std::process::Command::new("git")
-            .args(["clone", repo_url, &configs_dir])
+            .args(["clone", repo_url, &repo_path])
             .status()
             .map_err(|e| format!("执行 git clone 失败: {}", e))?;
         if !status.success() {
             return Err("克隆仓库失败".to_string());
         }
     } else if !configs_path.exists() {
-        return Err(format!("目录不存在: {}", configs_dir));
+        return Err(format!("目录不存在: {}", repo_path));
     }
 
     // 读取仓库中的 cfm.toml
@@ -57,17 +57,13 @@ pub fn execute(repo_url: &str, target_path: Option<&str>) -> Result<(), String> 
         return Err("仓库中未找到 cfm.toml 配置文件".to_string());
     }
 
-    let config_content =
-        std::fs::read_to_string(&config_path).map_err(|e| format!("读取配置文件失败: {}", e))?;
-
-    let repo_config: RepoConfig =
-        toml::from_str(&config_content).map_err(|e| format!("解析配置文件失败: {}", e))?;
+    let repo_config = RepoConfig::from_user_cfg_file()?;
 
     // 处理软件配置
     for (name, software) in &repo_config.software {
         // 创建链接
         if let Some(config_path) = software.get_config_path() {
-            let src = configs_path.join(&software.repo_path);
+            let src = configs_path.join(&software.src_path);
             let dst = std::path::PathBuf::from(expand_path(&config_path));
 
             if !src.exists() {
@@ -90,7 +86,7 @@ pub fn execute(repo_url: &str, target_path: Option<&str>) -> Result<(), String> 
     }
 
     // 保存用户配置
-    let user_config = UserConfig { target_path: configs_dir.clone(), editor: None };
+    let user_config = UserConfig { repo_path: repo_path.clone(), editor: None };
 
     user_config.save()?;
 

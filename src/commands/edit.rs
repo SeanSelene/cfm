@@ -12,7 +12,7 @@ pub fn execute(software_name: &str) -> Result<(), String> {
         .ok_or_else(|| format!("未找到软件配置: {}", software_name))?;
 
     // 使用仓库路径
-    let repo_path = std::path::PathBuf::from(&user_config.target_path).join(&software.repo_path);
+    let repo_path = std::path::PathBuf::from(&user_config.repo_path).join(&software.src_path);
 
     if !repo_path.exists() {
         return Err(format!("仓库路径不存在: {}", repo_path.display()));

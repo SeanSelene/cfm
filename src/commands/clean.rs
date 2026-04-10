@@ -4,7 +4,7 @@ use crate::utils::{self, remove_link_target};
 pub fn execute(force: bool) -> Result<(), String> {
     let user_config = UserConfig::load()?;
     let repo_config = RepoConfig::from_user_cfg(&user_config)?;
-    let target_path = std::path::Path::new(&user_config.target_path);
+    let target_path = std::path::Path::new(&user_config.repo_path);
 
     // 收集要删除的路径
     let mut paths_to_delete = repo_config.get_apply_files();

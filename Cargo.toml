@@ -11,6 +11,7 @@ dirs = "6"
 which = "8"
 shellexpand = "3"
 unicode-width = "0.2"
+thiserror = "2.0.18"
 
 [target.'cfg(windows)'.dependencies]
 winapi = { version = "0.3", features = ["winbase", "fileapi"] }

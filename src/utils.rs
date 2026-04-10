@@ -1,6 +1,6 @@
 use std::fs;
 use std::io::{self, Write};
-use std::path::PathBuf;
+use std::path::Path;
 
 /// 展开路径中的环境变量和 ~
 pub fn expand_path(input: &str) -> String {
@@ -58,6 +58,23 @@ pub fn create_soft_link(src: &std::path::Path, dst: &std::path::Path) -> Result<
     #[cfg(not(windows))]
     {
         std::os::unix::fs::symlink(src, dst).map_err(|e| format!("创建软链接失败: {}", e))
+    }
+}
+
+/// 创建目录的软连接(unix)或junction(windows)
+/// 此方法没有确认源存在，也没有删除目标路径，也没有确认是文件夹
+pub fn soft_link_dir<P: AsRef<Path>, Q: AsRef<Path>>(original: P, link: Q) -> io::Result<()> {
+    let original = original.as_ref();
+    let link = link.as_ref();
+    // 确保父级存在
+    if let Some(parent) = link.parent() {
+        std::fs::create_dir_all(parent)?;
+    }
+    match () {
+        #[cfg(windows)]
+        _ => junction::create(original, link),
+        #[cfg(not(windows))]
+        _ => std::os::unix::fs::symlink(original, link),
     }
 }
 
@@ -145,6 +162,34 @@ fn copy_dir_all(src: &std::path::Path, dst: &std::path::Path) -> Result<(), Stri
             copy_dir_all(&src_path, &dst_path)?;
         } else {
             std::fs::copy(&src_path, &dst_path).map_err(|e| format!("复制文件失败: {}", e))?;
+        }
+    }
+
+    Ok(())
+}
+
+pub fn copy_dir_recursive<P: AsRef<Path>, Q: AsRef<Path>>(src: P, dst: Q) -> io::Result<()> {
+    let src = src.as_ref();
+    let dst = dst.as_ref();
+    if !dst.exists() {
+        fs::create_dir_all(dst)?;
+    }
+    for entry in fs::read_dir(src)? {
+        let entry = entry?;
+        let src_path = entry.path();
+        let dst_path = dst.join(entry.file_name());
+
+        // 用 symlink_metadata 获取条目本身的类型，不跟随符号链接
+        let metadata = fs::symlink_metadata(&src_path)?;
+        let file_type = metadata.file_type();
+
+        if file_type.is_symlink() {
+            // TODO: 符号链接的处理
+            todo!()
+        } else if file_type.is_dir() {
+            copy_dir_recursive(&src_path, &dst_path)?;
+        } else {
+            fs::copy(&src_path, &dst_path)?;
         }
     }
 

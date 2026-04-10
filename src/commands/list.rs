@@ -5,7 +5,7 @@ pub fn execute() -> Result<(), String> {
     let user_config = UserConfig::load()?;
     let repo_config = RepoConfig::from_user_cfg(&user_config)?;
 
-    let target_path = std::path::Path::new(&user_config.target_path);
+    let target_path = std::path::Path::new(&user_config.repo_path);
     print_software_list(&repo_config, target_path);
 
     Ok(())
@@ -31,7 +31,7 @@ pub fn print_software_list(repo_config: &RepoConfig, target_path: &std::path::Pa
             crate::config::LinkMode::Cp => "copy",
         };
 
-        let src = target_path.join(&software.repo_path);
+        let src = target_path.join(&software.src_path);
         let status = if src.exists() { "✓" } else { "✗" };
 
         let config_path =
@@ -41,7 +41,7 @@ pub fn print_software_list(repo_config: &RepoConfig, target_path: &std::path::Pa
             name.clone(),
             link_mode.to_string(),
             status.to_string(),
-            software.repo_path.clone(),
+            software.src_path.clone(),
             config_path,
         ];
 
