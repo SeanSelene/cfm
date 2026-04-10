@@ -77,9 +77,9 @@ impl SoftwareConfig {
             #[cfg(target_os = "macos")]
             _ => self.dest_path_mac.as_ref().or(self.dest_path_unix.as_ref()),
             #[cfg(all(unix, not(target_os = "macos")))]
-            _ => &self.dest_path_unix,
+            _ => &self.dest_path_unix.as_ref(),
             #[cfg(windows)]
-            _ => &self.dest_path_win,
+            _ => &self.dest_path_win.as_ref(),
             #[cfg(not(any(unix, windows)))] // 兜底其他系统
             _ => &None,
         };
