@@ -1,6 +1,6 @@
-use super::list::print_software_list;
+use super::{apply::apply, list::print_software_list};
 use crate::config::{RepoConfig, UserConfig};
-use crate::utils::{self, copy_path, create_hard_link, create_soft_link, expand_path};
+use crate::utils::{self, expand_path};
 
 /// 从 Git URL 中提取仓库名
 fn extract_repo_name(url: &str) -> String {
@@ -52,48 +52,21 @@ pub fn execute(repo_url: &str, repo_path: Option<&str>) -> Result<(), String> {
     }
 
     // 读取仓库中的 cfm.toml
-    let config_path = configs_path.join("cfm.toml");
-    if !config_path.exists() {
-        return Err("仓库中未找到 cfm.toml 配置文件".to_string());
-    }
-
-    let repo_config = RepoConfig::from_user_cfg_file()?;
+    let repo_config = RepoConfig::from_path(configs_path)?;
 
     // 处理软件配置
-    for (name, software) in &repo_config.software {
-        // 创建链接
-        if let Some(config_path) = software.get_config_path() {
-            let src = configs_path.join(&software.src_path);
-            let dst = std::path::PathBuf::from(expand_path(&config_path));
-
-            if !src.exists() {
-                println!("跳过 {}: 源路径不存在 {}", name, src.display());
-                continue;
-            }
-
-            let result = match software.link_mode {
-                crate::config::LinkMode::Soft => create_soft_link(&src, &dst),
-                crate::config::LinkMode::Hard => create_hard_link(&src, &dst),
-                crate::config::LinkMode::Cp => copy_path(&src, &dst),
-            };
-
-            if let Err(e) = result {
-                println!("链接 {} 失败: {}", name, e);
-            } else {
-                println!("已链接 {} -> {}", name, dst.display());
-            }
-        }
-    }
+    let software_map: std::collections::HashMap<_, _> = repo_config.software.iter().collect();
+    apply(&software_map, false, configs_path)?;
 
     // 保存用户配置
     let user_config = UserConfig { repo_path: repo_path.clone(), editor: None };
 
     user_config.save()?;
 
-    // 显示软件列表
-    print_software_list(&repo_config, configs_path);
-
     println!("\n初始化完成，配置已保存到 {}", UserConfig::config_path().display());
-
+    println!();
+    println!("软件列表：");
+    // 显示软件列表
+    repo_config.print(&user_config.repo_path);
     Ok(())
 }

@@ -17,7 +17,7 @@ pub fn apply(
     let mut exist = Vec::new();
     let mut to_handle: HashMap<_, _> = HashMap::new();
     for (name, software) in software_map {
-        match software.check_dest_path(repo_path) {
+        match software.pre_check(repo_path) {
             Ok((src, dest)) => {
                 to_handle.insert(name, (&software.link_mode, src, dest));
             }
@@ -42,7 +42,7 @@ pub fn apply(
     }
     if !exist.is_empty() && !force {
         let msg = exist.iter().map(|i| i.to_string_lossy()).collect::<Vec<_>>().join("\n");
-        let tip = format!("以下路径已存在:\n{msg}\n是否覆盖? \n");
+        let tip = format!("以下路径已存在:\n{msg}\n是否覆盖? ");
         confirm(&tip)?;
     };
     // 删除已经存在的目录
@@ -76,6 +76,7 @@ pub fn execute(names: Option<Vec<String>>) -> Result<(), String> {
     let is_empty = names.is_empty();
     let software: HashMap<_, _> =
         repo_config.software.iter().filter(|(name, _)| is_empty || names.contains(*name)).collect();
-    apply(&software, false, user_config.repo_path)?;
+    apply(&software, false, &user_config.repo_path)?;
+    repo_config.print(&user_config.repo_path);
     Ok(())
 }

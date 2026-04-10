@@ -1,8 +1,10 @@
 use serde::{Deserialize, Serialize};
 use std::{
     collections::HashMap,
+    fs,
     path::{self, Path, PathBuf},
 };
+use tabled::{builder::Builder, settings::Style};
 use thiserror::Error;
 
 use crate::utils::{self, expand_path};
@@ -37,11 +39,11 @@ pub struct SoftwareConfig {
 
 #[derive(Error, Debug)]
 pub enum ConfigError {
-    #[error("链接不匹配: 源路径 {0} 与 目标路径 {1} 不一致")]
+    #[error("链接不匹配: 源路径目标路径不一致")]
     LinkNotMatch(PathBuf, PathBuf),
     #[error("目标路径已存在: {0}")]
     DestExist(PathBuf),
-    #[error("源路径不存在: {0}")]
+    #[error("源路径不存在")]
     SrcNotExist(PathBuf),
     #[error("目标路径配置缺失")]
     DestConfigMiss,
@@ -87,11 +89,8 @@ impl SoftwareConfig {
     pub fn get_dest_path_buf(&self) -> Option<PathBuf> {
         self.get_dest_path().map(|p| utils::expand_path(p).into())
     }
-    pub fn get_src_path_buf(&self, repo_path: &Path) -> PathBuf {
-        repo_path.join(utils::expand_path(&self.src_path)) // 拼接上仓库路径
-    }
-    pub fn check_dest_path(&self, repo_path: &Path) -> Result<(PathBuf, PathBuf), ConfigError> {
-        let src_path = self.get_src_path_buf(repo_path);
+    fn common_check(&self, repo_path: impl AsRef<Path>) -> Result<(PathBuf, PathBuf), ConfigError> {
+        let src_path = self.get_src_path_buf(repo_path.as_ref());
         if !src_path.exists() {
             return Err(ConfigError::SrcNotExist(src_path.to_path_buf()));
         }
@@ -104,21 +103,38 @@ impl SoftwareConfig {
         let Some(dest_path) = self.get_dest_path_buf() else {
             return Err(ConfigError::DestConfigMiss);
         };
+        Ok((src_path, dest_path))
+    }
+    pub fn get_src_path_buf(&self, repo_path: &Path) -> PathBuf {
+        repo_path.join(utils::expand_path(&self.src_path)) // 拼接上仓库路径
+    }
+    pub fn pre_check(
+        &self,
+        repo_path: impl AsRef<Path>,
+    ) -> Result<(PathBuf, PathBuf), ConfigError> {
+        let (src_path, dest_path) = self.common_check(repo_path)?;
         // 检查目标路径是否存在
         if !dest_path.exists() {
             return Ok((src_path.to_path_buf(), dest_path));
         }
-        // 软链接如果是一致的就不用报错
-        // if self.link_mode == LinkMode::Soft && dest_path.is_symlink() {
-        //     let dest_path_to = match fs::read_link(dest_path) {
-        //         Ok(path) => path,
-        //         Err(e) => return Err(ConfigError::Io(e)),
-        //     };
-        //     if dest_path_to != src_path_string {
-        //         return Err(ConfigError::LinkNotMatch(src_path.to_path_buf(), dest_path_to));
-        //     }
-        // }
         Err(ConfigError::DestExist(dest_path.to_path_buf()))
+    }
+    pub fn after_check(&self, repo_path: impl AsRef<Path>) -> Result<(), String> {
+        let (src_path, dest_path) = self.common_check(repo_path).map_err(|e| e.to_string())?;
+        if !dest_path.exists() {
+            return Err("配置文件不存在".into());
+        }
+        // 软链接如果是一致的就不用报错
+        if self.link_mode == LinkMode::Soft && dest_path.is_symlink() {
+            let dest_path_to = match fs::read_link(dest_path) {
+                Ok(path) => path,
+                Err(e) => return Err(e.to_string()),
+            };
+            if dest_path_to != src_path {
+                return Err("链接不一致".into());
+            }
+        }
+        Ok(())
     }
 }
 
@@ -136,10 +152,13 @@ impl RepoConfig {
     }
 
     pub fn from_user_cfg(user_cfg: &UserConfig) -> Result<Self, String> {
-        let target_path = std::path::Path::new(&user_cfg.repo_path);
-        let config_path = target_path.join("cfm.toml");
+        Self::from_path(&user_cfg.repo_path)
+    }
+
+    pub fn from_path(path: impl AsRef<std::path::Path>) -> Result<Self, String> {
+        let config_path = path.as_ref().join("cfm.toml");
         if !config_path.exists() {
-            return Err("仓库中未找到 cfm.toml 配置文件".to_string());
+            return Err(format!("缺失必要文件 {}", config_path.display()));
         }
         let config_content = std::fs::read_to_string(&config_path)
             .map_err(|e| format!("读取配置文件失败: {}", e))?;
@@ -159,6 +178,22 @@ impl RepoConfig {
                 path.symlink_metadata().ok().map(|_| (name.clone(), path))
             })
             .collect()
+    }
+
+    pub fn print(&self, repo_path: impl AsRef<Path>) {
+        let mut builder = Builder::default();
+        builder.push_record(["名称", "状态", "源路径", "目标路径"]);
+        for (name, sw) in &self.software {
+            let dest_path = sw.get_dest_path().map(|i| i.as_str()).unwrap_or("");
+            let status = match sw.after_check(&repo_path) {
+                Ok(_) => "✓".into(),
+                Err(e) => e,
+            };
+            builder.push_record([name, &status, &sw.src_path, dest_path]);
+        }
+        let mut table = builder.build();
+        table.with(Style::modern());
+        println!("{table}");
     }
 }
 

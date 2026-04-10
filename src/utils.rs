@@ -202,7 +202,7 @@ pub fn is_git_repo(path: &str) -> bool {
 }
 
 pub fn confirm(tip: &str) -> Result<(), String> {
-    print!("{tip}? [y/N] ");
+    print!("{tip}[y/N] ");
     io::stdout().flush().map_err(|e| format!("刷新输出失败: {}", e))?;
 
     let mut input = String::new();
