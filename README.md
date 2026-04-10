@@ -34,21 +34,13 @@ cfm load <repo_url> [target_path]
 
 克隆配置仓库并创建链接。`target_path` 默认为 `~/{仓库名}`。
 
-### 拉取更新
+### 应用配置
 
 ```bash
-cfm pull
+cfm apply [software...]
 ```
 
-拉取仓库更新并重新创建链接。
-
-### 推送更改
-
-```bash
-cfm push [name]
-```
-
-将本地配置同步回仓库并推送到远程。
+为指定软件创建链接或复制文件。不指定软件名称时，应用所有已配置的软件。若目标路径已存在，会提示确认是否覆盖。
 
 ### 列出配置
 
@@ -72,7 +64,15 @@ cfm edit <software>
 cfm clean
 ```
 
-清理所有创建的链接、复制的文件、克隆目录和配置文件。
+清理所有创建的链接、复制的文件、克隆目录和配置文件。使用 `-f` 或 `--force` 跳过确认提示。
+
+### 取消应用
+
+```bash
+cfm unapply [-f] [software...]
+```
+
+删除指定软件已创建的链接或复制的文件。不指定软件名称时，取消应用所有软件。使用 `-f` 或 `--force` 跳过确认提示。
 
 ## 配置文件
 
@@ -80,33 +80,33 @@ cfm clean
 
 ```toml
 [nvim]
-repo_path = "nvim"
+src_path = "nvim"
 link_mode = "soft"
-config_path_unix = "~/.config/nvim"
-config_path_win = "{APPDATA}/nvim"
+dest_path_unix = "~/.config/nvim"
+dest_path_win = "{APPDATA}/nvim"
 
 [starship]
-repo_path = "starship/starship.toml"
+src_path = "starship/starship.toml"
 link_mode = "hard"
-config_path = "~/.config/starship.toml"
+dest_path = "~/.config/starship.toml"
 
 [zed]
-repo_path = "zed"
+src_path = "zed"
 link_mode = "cp"
-config_path_unix = "~/.config/zed"
-config_path_win = "{APPDATA}/Zed"
+dest_path_unix = "~/.config/zed"
+dest_path_win = "{APPDATA}/Zed"
 ```
 
 ### 配置项说明
 
 | 字段               | 说明                                                 |
 | ------------------ | ---------------------------------------------------- |
-| `repo_path`        | 配置文件在仓库中的相对路径                           |
+| `src_path`         | 配置文件在仓库中的相对路径                           |
 | `link_mode`        | 链接模式：`soft`(软链接)、`hard`(硬链接)、`cp`(复制) |
-| `config_path`      | 通用配置路径                                         |
-| `config_path_unix` | Unix 系统配置路径                                    |
-| `config_path_win`  | Windows 配置路径                                     |
-| `config_path_mac`  | macOS 配置路径                                       |
+| `dest_path`        | 通用配置路径                                         |
+| `dest_path_unix`   | Unix 系统配置路径                                    |
+| `dest_path_win`    | Windows 配置路径                                     |
+| `dest_path_mac`    | macOS 配置路径                                       |
 
 ### 链接模式
 

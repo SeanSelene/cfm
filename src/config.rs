@@ -171,10 +171,6 @@ impl RepoConfig {
             .filter_map(|(name, sw)| {
                 let config_path = sw.get_config_path()?;
                 let path = PathBuf::from(expand_path(&config_path));
-                println!(
-                    "get_apply_files: {name:?}, {config_path:?}, {:?}",
-                    path.symlink_metadata()
-                );
                 path.symlink_metadata().ok().map(|_| (name.clone(), path))
             })
             .collect()

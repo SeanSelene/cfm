@@ -19,23 +19,23 @@
 
 ## 路径配置优先级
 
-- macOS: `config_path_mac` > `config_path_unix` > `config_path`
-- Linux: `config_path_unix` > `config_path`
-- Windows: `config_path_win` > `config_path`
+- macOS: `dest_path_mac` > `dest_path_unix` > `dest_path`
+- Linux: `dest_path_unix` > `dest_path`
+- Windows: `dest_path_win` > `dest_path`
 
 ## 仓库配置示例 (cfm.toml)
 
 ```toml
 [nvim]
-repo_path = "nvim"
+src_path = "nvim"
 link_mode = "soft"
-config_path_unix = "~/.config/nvim"
-config_path_win = "{APPDATA}/nvim"
+dest_path_unix = "~/.config/nvim"
+dest_path_win = "{APPDATA}/nvim"
 
 [starship]
-repo_path = "starship/starship.toml"
+src_path = "starship/starship.toml"
 link_mode = "hard"
-config_path = "~/.config/starship.toml"
+dest_path = "~/.config/starship.toml"
 ```
 
 ---
