@@ -178,14 +178,15 @@ impl RepoConfig {
 
     pub fn print(&self, repo_path: impl AsRef<Path>) {
         let mut builder = Builder::default();
-        builder.push_record(["名称", "状态", "源路径", "目标路径"]);
+        builder.push_record(["名称", "链接模式", "状态", "源路径", "目标路径"]);
         for (name, sw) in &self.software {
             let dest_path = sw.get_dest_path().map(|i| i.as_str()).unwrap_or("");
+            let link_mode = toml::to_string(&sw.link_mode).unwrap_or("unknown".into());
             let status = match sw.after_check(&repo_path) {
-                Ok(_) => "✓".into(),
-                Err(e) => e,
+                Ok(_) => "✅".into(),
+                Err(e) => format!("❌ {}", e),
             };
-            builder.push_record([name, &status, &sw.src_path, dest_path]);
+            builder.push_record([name, &link_mode, &status, &sw.src_path, dest_path]);
         }
         let mut table = builder.build();
         table.with(Style::modern());

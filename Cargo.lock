@@ -76,7 +76,6 @@ dependencies = [
  "tabled",
  "thiserror",
  "toml",
- "unicode-width",
  "which",
  "winapi",
 ]
