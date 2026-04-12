@@ -48,7 +48,10 @@ pub fn apply<'a>(
             fs::remove_dir_all(&file_path)
         };
         if let Err(e) = res {
-            return Err(format!("删除 {file_path:?} 失败: {e}"));
+            match e.kind() {
+                std::io::ErrorKind::NotFound => {}
+                _ => return Err(format!("删除 {file_path:?} 失败: {e}")),
+            }
         }
     }
     for (name, mode, src, dest) in to_handle {
@@ -70,7 +73,12 @@ pub fn execute(names: Option<Vec<String>>) -> Result<(), String> {
     let names: HashSet<String> = names.map(|n| n.into_iter().collect()).unwrap_or_default();
     let is_empty = names.is_empty();
     let apps = repo_config.apps.iter().filter(|app| is_empty || names.contains(&app.name));
+    let mut apps = apps.peekable();
+    if apps.peek().is_none() {
+        return Err(format!("没有需要处理的应用，请检查配置或参数"));
+    }
     apply(apps, false, &user_config.repo_path)?;
+    println!("\n已完成，所有应用配置如下：");
     repo_config.print(&user_config.repo_path);
     Ok(())
 }
