@@ -28,7 +28,7 @@ pub fn execute(repo_url: &str, repo_path: Option<&str>) -> Result<(), String> {
                 home.join(&repo_name).to_string_lossy().into_owned()
             } else {
                 // load 本地仓库或目录
-                repo_url.into()
+                utils::expand_path(repo_url)
             }
         }
     };
