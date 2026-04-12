@@ -55,8 +55,7 @@ pub fn execute(repo_url: &str, repo_path: Option<&str>) -> Result<(), String> {
     let repo_config = RepoConfig::from_path(configs_path)?;
 
     // 处理软件配置
-    let app_map: std::collections::HashMap<_, _> = repo_config.apps.iter().collect();
-    apply(&app_map, false, configs_path)?;
+    apply(repo_config.apps.iter(), false, configs_path)?;
 
     // 保存用户配置
     let user_config = UserConfig { repo_path: repo_path.clone(), editor: None };

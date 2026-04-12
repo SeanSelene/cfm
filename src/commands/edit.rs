@@ -6,7 +6,11 @@ pub fn execute(app: &str) -> Result<(), String> {
     let repo_config = RepoConfig::from_user_cfg(&user_config)?;
 
     // 查找软件配置
-    let software = repo_config.apps.get(app).ok_or_else(|| format!("未找到软件配置: {}", app))?;
+    let software = repo_config
+        .apps
+        .iter()
+        .find(|s| s.name == app)
+        .ok_or_else(|| format!("未找到软件配置: {}", app))?;
 
     // 使用仓库路径
     let repo_path = std::path::PathBuf::from(&user_config.repo_path).join(&software.src_path);

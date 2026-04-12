@@ -79,28 +79,32 @@ cfm unapply [-f] [app...]
 在仓库根目录创建 `cfm.toml`：
 
 ```toml
-[nvim]
+[[apps]]
+name = "nvim"
 src_path = "nvim"
 link_mode = "soft"
 dest_path_unix = "~/.config/nvim"
-dest_path_win = "{APPDATA}/nvim"
+dest_path_win = "$APPDATA/nvim"
 
-[starship]
+[[apps]]
+name = "starship"
 src_path = "starship/starship.toml"
 link_mode = "hard"
 dest_path = "~/.config/starship.toml"
 
-[zed]
+[[apps]]
+name = "zed"
 src_path = "zed"
 link_mode = "cp"
 dest_path_unix = "~/.config/zed"
-dest_path_win = "{APPDATA}/Zed"
+dest_path_win = "$APPDATA/Zed"
 ```
 
 ### 配置项说明
 
 | 字段               | 说明                                                 |
 | ------------------ | ---------------------------------------------------- |
+| `name`             | 软件名称                                             |
 | `src_path`         | 配置文件在仓库中的相对路径                           |
 | `link_mode`        | 链接模式：`soft`(软链接)、`hard`(硬链接)、`cp`(复制) |
 | `dest_path`        | 通用配置路径                                         |

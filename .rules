@@ -26,13 +26,15 @@
 ## 仓库配置示例 (cfm.toml)
 
 ```toml
-[nvim]
+[[apps]]
+name = "nvim"
 src_path = "nvim"
 link_mode = "soft"
 dest_path_unix = "~/.config/nvim"
-dest_path_win = "{APPDATA}/nvim"
+dest_path_win = "$APPDATA/nvim"
 
-[starship]
+[[apps]]
+name = "starship"
 src_path = "starship/starship.toml"
 link_mode = "hard"
 dest_path = "~/.config/starship.toml"

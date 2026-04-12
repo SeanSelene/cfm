@@ -1,6 +1,5 @@
 use serde::{Deserialize, Serialize};
 use std::{
-    collections::HashMap,
     fmt, fs,
     path::{self, Path, PathBuf},
 };
@@ -33,6 +32,8 @@ impl fmt::Display for LinkMode {
 /// 软件配置项
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct AppConfig {
+    /// 名称
+    pub name: String,
     /// 仓库中的路径
     pub src_path: String,
     /// 链接模式
@@ -152,8 +153,7 @@ impl AppConfig {
 /// 仓库配置文件 (cfm.toml)
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct RepoConfig {
-    #[serde(flatten)]
-    pub apps: HashMap<String, AppConfig>,
+    pub apps: Vec<AppConfig>,
 }
 
 impl RepoConfig {
@@ -179,10 +179,10 @@ impl RepoConfig {
     pub fn get_apply_files(&self) -> Vec<(String, path::PathBuf)> {
         self.apps
             .iter()
-            .filter_map(|(name, sw)| {
+            .filter_map(|sw| {
                 let config_path = sw.get_config_path()?;
                 let path = PathBuf::from(expand_path(&config_path));
-                path.symlink_metadata().ok().map(|_| (name.clone(), path))
+                path.symlink_metadata().ok().map(|_| (sw.name.clone(), path))
             })
             .collect()
     }
@@ -190,14 +190,14 @@ impl RepoConfig {
     pub fn print(&self, repo_path: impl AsRef<Path>) {
         let mut builder = Builder::default();
         builder.push_record(["名称", "链接模式", "状态", "源路径", "目标路径"]);
-        for (name, sw) in &self.apps {
+        for sw in &self.apps {
             let dest_path = sw.get_dest_path().map(|i| i.as_str()).unwrap_or("");
             let link_mode = sw.link_mode.to_string();
             let status = match sw.after_check(&repo_path) {
                 Ok(_) => "✅".into(),
                 Err(e) => format!("❌ {}", e),
             };
-            builder.push_record([name, &link_mode, &status, &sw.src_path, dest_path]);
+            builder.push_record([&sw.name, &link_mode, &status, &sw.src_path, dest_path]);
         }
         let mut table = builder.build();
         table.with(Style::modern());
