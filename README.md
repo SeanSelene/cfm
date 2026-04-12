@@ -37,7 +37,7 @@ cfm load <repo_url> [target_path]
 ### 应用配置
 
 ```bash
-cfm apply [software...]
+cfm apply [app...]
 ```
 
 为指定软件创建链接或复制文件。不指定软件名称时，应用所有已配置的软件。若目标路径已存在，会提示确认是否覆盖。
@@ -53,7 +53,7 @@ cfm list
 ### 编辑配置
 
 ```bash
-cfm edit <software>
+cfm edit <app>
 ```
 
 使用编辑器打开指定软件的配置目录。
@@ -69,7 +69,7 @@ cfm clean
 ### 取消应用
 
 ```bash
-cfm unapply [-f] [software...]
+cfm unapply [-f] [app...]
 ```
 
 删除指定软件已创建的链接或复制的文件。不指定软件名称时，取消应用所有软件。使用 `-f` 或 `--force` 跳过确认提示。

@@ -1,7 +1,7 @@
 use serde::{Deserialize, Serialize};
 use std::{
     collections::HashMap,
-    fs,
+    fmt, fs,
     path::{self, Path, PathBuf},
 };
 use tabled::{builder::Builder, settings::Style};
@@ -19,9 +19,20 @@ pub enum LinkMode {
     Cp,
 }
 
+impl fmt::Display for LinkMode {
+    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+        let s = match self {
+            LinkMode::Soft => "soft",
+            LinkMode::Hard => "hard",
+            LinkMode::Cp => "cp",
+        };
+        write!(f, "{}", s)
+    }
+}
+
 /// 软件配置项
 #[derive(Debug, Clone, Serialize, Deserialize)]
-pub struct SoftwareConfig {
+pub struct AppConfig {
     /// 仓库中的路径
     pub src_path: String,
     /// 链接模式
@@ -66,7 +77,7 @@ impl ConfigError {
     }
 }
 
-impl SoftwareConfig {
+impl AppConfig {
     /// 获取当前平台的配置路径
     pub fn get_config_path(&self) -> Option<String> {
         self.get_dest_path().cloned()
@@ -142,7 +153,7 @@ impl SoftwareConfig {
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct RepoConfig {
     #[serde(flatten)]
-    pub software: HashMap<String, SoftwareConfig>,
+    pub apps: HashMap<String, AppConfig>,
 }
 
 impl RepoConfig {
@@ -166,7 +177,7 @@ impl RepoConfig {
     }
 
     pub fn get_apply_files(&self) -> Vec<(String, path::PathBuf)> {
-        self.software
+        self.apps
             .iter()
             .filter_map(|(name, sw)| {
                 let config_path = sw.get_config_path()?;
@@ -179,9 +190,9 @@ impl RepoConfig {
     pub fn print(&self, repo_path: impl AsRef<Path>) {
         let mut builder = Builder::default();
         builder.push_record(["名称", "链接模式", "状态", "源路径", "目标路径"]);
-        for (name, sw) in &self.software {
+        for (name, sw) in &self.apps {
             let dest_path = sw.get_dest_path().map(|i| i.as_str()).unwrap_or("");
-            let link_mode = toml::to_string(&sw.link_mode).unwrap_or("unknown".into());
+            let link_mode = sw.link_mode.to_string();
             let status = match sw.after_check(&repo_path) {
                 Ok(_) => "✅".into(),
                 Err(e) => format!("❌ {}", e),

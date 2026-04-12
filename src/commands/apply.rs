@@ -4,22 +4,22 @@ use std::{
 };
 
 use crate::{
-    config::{ConfigError, LinkMode, RepoConfig, SoftwareConfig, UserConfig},
+    config::{AppConfig, ConfigError, LinkMode, RepoConfig, UserConfig},
     utils::{self, confirm},
 };
 
 pub fn apply(
-    software_map: &HashMap<&String, &SoftwareConfig>,
+    apps_map: &HashMap<&String, &AppConfig>,
     force: bool,
     repo_path: impl AsRef<std::path::Path>,
 ) -> Result<(), String> {
     let repo_path = repo_path.as_ref();
     let mut exist = Vec::new();
     let mut to_handle: HashMap<_, _> = HashMap::new();
-    for (name, software) in software_map {
-        match software.pre_check(repo_path) {
+    for (name, app) in apps_map {
+        match app.pre_check(repo_path) {
             Ok((src, dest)) => {
-                to_handle.insert(name, (&software.link_mode, src, dest));
+                to_handle.insert(name, (&app.link_mode, src, dest));
             }
             Err(e) => match e {
                 ConfigError::DestExist(path_buf) => {
@@ -27,9 +27,9 @@ pub fn apply(
                     to_handle.insert(
                         name,
                         (
-                            &software.link_mode,
-                            software.get_src_path_buf(repo_path),
-                            software.get_dest_path_buf().unwrap(), // SAFETY: 已经在 check_dest_path 中检查过了
+                            &app.link_mode,
+                            app.get_src_path_buf(repo_path),
+                            app.get_dest_path_buf().unwrap(), // SAFETY: 已经在 check_dest_path 中检查过了
                         ),
                     );
                 }
@@ -74,9 +74,9 @@ pub fn execute(names: Option<Vec<String>>) -> Result<(), String> {
     let repo_config = RepoConfig::from_user_cfg(&user_config)?;
     let names: HashSet<String> = names.map(|n| n.into_iter().collect()).unwrap_or_default();
     let is_empty = names.is_empty();
-    let software: HashMap<_, _> =
-        repo_config.software.iter().filter(|(name, _)| is_empty || names.contains(*name)).collect();
-    apply(&software, false, &user_config.repo_path)?;
+    let apps: HashMap<_, _> =
+        repo_config.apps.iter().filter(|(name, _)| is_empty || names.contains(*name)).collect();
+    apply(&apps, false, &user_config.repo_path)?;
     repo_config.print(&user_config.repo_path);
     Ok(())
 }

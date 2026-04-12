@@ -34,7 +34,7 @@ enum Commands {
     /// 使用编辑器打开软件配置目录
     Edit {
         /// 软件名称
-        software: String,
+        app: String,
     },
     /// 列出所有已配置的软件
     #[command(alias = "ls")]
@@ -49,12 +49,12 @@ enum Commands {
     Version,
     Apply {
         /// 软件名称
-        software: Option<Vec<String>>,
+        app: Option<Vec<String>>,
     },
     /// 删除创建的链接、复制的文件
     Unapply {
         /// 软件名称
-        software: Option<Vec<String>>,
+        app: Option<Vec<String>>,
         /// 跳过确认提示
         #[arg(short, long)]
         force: bool,
@@ -78,16 +78,14 @@ pub fn run() -> Result<(), String> {
 
     match command {
         Commands::Load { repo: repo_url, target_path } => load(&repo_url, target_path.as_deref()),
-        Commands::Edit { software } => edit(&software),
+        Commands::Edit { app } => edit(&app),
         Commands::List => list(),
         Commands::Clean { force } => clean(force),
         Commands::Version => {
             println!("cfm {}", env!("CARGO_PKG_VERSION"));
             Ok(())
         }
-        Commands::Apply { software } => apply(software),
-        Commands::Unapply { software, force } => {
-            unapply(software.map(|v| v.into_iter().collect()), force)
-        }
+        Commands::Apply { app } => apply(app),
+        Commands::Unapply { app, force } => unapply(app.map(|v| v.into_iter().collect()), force),
     }
 }
