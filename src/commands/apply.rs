@@ -75,7 +75,7 @@ pub fn execute(names: Option<Vec<String>>) -> Result<(), String> {
     let apps = repo_config.apps.iter().filter(|app| is_empty || names.contains(&app.name));
     let mut apps = apps.peekable();
     if apps.peek().is_none() {
-        return Err(format!("没有需要处理的应用，请检查配置或参数"));
+        return Err("没有需要处理的应用，请检查配置或参数".to_string());
     }
     apply(apps, false, &user_config.repo_path)?;
     println!("\n已完成，所有应用配置如下：");

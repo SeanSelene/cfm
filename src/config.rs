@@ -218,21 +218,12 @@ pub struct UserConfig {
 impl UserConfig {
     /// 获取用户配置文件路径
     pub fn config_path() -> std::path::PathBuf {
-        #[cfg(unix)]
-        {
-            let mut path =
-                dirs::config_dir().unwrap_or_else(|| std::path::PathBuf::from("~/.config"));
-            path.push("cfm/config.toml");
-            path
-        }
-
-        #[cfg(windows)]
-        {
-            let mut path =
-                dirs::config_dir().unwrap_or_else(|| std::path::PathBuf::from("%AppData%"));
-            path.push("cfm\\config.toml");
-            path
-        }
+        let mut path = dirs::config_dir().unwrap_or_else(|| {
+            let dir = if cfg!(windows) { "%AppData%" } else { "~/.config" };
+            std::path::PathBuf::from(dir)
+        });
+        path.push("cfm/config.toml");
+        path
     }
 
     /// 加载用户配置
