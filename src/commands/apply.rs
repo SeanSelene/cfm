@@ -1,7 +1,7 @@
 use std::{collections::HashSet, fs, path::PathBuf};
 
 use crate::{
-    config::{AppConfig, ConfigError, LinkMode, RepoConfig, UserConfig},
+    config::{self, AppConfig, ConfigError, LinkMode, RepoConfig, UserConfig},
     utils::{self, confirm},
 };
 
@@ -14,18 +14,18 @@ pub fn apply<'a>(
     let mut exist = Vec::new();
     let mut to_handle: Vec<(&str, &LinkMode, PathBuf, PathBuf)> = Vec::new();
     for app in apps {
-        match app.pre_check(repo_path) {
+        match config::pre_check(app, repo_path) {
             Ok((src, dest)) => {
                 to_handle.push((&app.name, &app.link_mode, src, dest));
             }
             Err(e) => match e {
-                ConfigError::DestExist(path_buf) => {
-                    exist.push(path_buf);
+                ConfigError::DestExist { dest_path, src_path } => {
+                    exist.push(dest_path.clone());
                     to_handle.push((
                         &app.name,
                         &app.link_mode,
-                        app.get_src_path_buf(repo_path),
-                        app.get_dest_path_buf().unwrap(), // SAFETY: 已经在 check_dest_path 中检查过了
+                        src_path,
+                        dest_path, // SAFETY: 已经在 check_dest_path 中检查过了
                     ));
                 }
                 ConfigError::SrcNotExist(pb) => {
