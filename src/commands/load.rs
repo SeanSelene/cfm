@@ -1,4 +1,6 @@
 use super::apply::apply;
+#[cfg(windows)]
+use crate::config::LinkMode;
 use crate::config::{RepoConfig, UserConfig};
 use crate::utils::{self, expand_path};
 
@@ -54,13 +56,23 @@ pub fn execute(repo_url: &str, repo_path: Option<&str>) -> Result<(), String> {
     // 读取仓库中的 cfm.toml
     let repo_config = RepoConfig::from_path(configs_path)?;
 
+    // 先保存用户配置，以便提权后的进程可以正常加载
+    let user_config = UserConfig { repo_path: repo_path.clone(), editor: None };
+    user_config.save()?;
+
+    // Windows 下若存在 Soft 链接，需要管理员权限再执行 apply
+    #[cfg(windows)]
+    {
+        let needs_admin = repo_config.apps.iter().any(|app| app.link_mode == LinkMode::Soft);
+        if needs_admin && !utils::is_elevated() {
+            utils::elevate(&["apply"])?;
+            println!("\n初始化完成，配置已保存到 {}", UserConfig::config_path().display());
+            return Ok(());
+        }
+    }
+
     // 处理软件配置
     apply(repo_config.apps.iter(), false, configs_path)?;
-
-    // 保存用户配置
-    let user_config = UserConfig { repo_path: repo_path.clone(), editor: None };
-
-    user_config.save()?;
 
     println!("\n初始化完成，配置已保存到 {}", UserConfig::config_path().display());
     println!();

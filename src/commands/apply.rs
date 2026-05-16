@@ -56,7 +56,7 @@ pub fn apply<'a>(
     }
     for (name, mode, src, dest) in to_handle {
         let res = match mode {
-            LinkMode::Soft => utils::soft_link_dir(src, dest),
+            LinkMode::Soft => utils::soft_link(src, dest),
             LinkMode::Hard => fs::hard_link(src, dest),
             LinkMode::Cp => utils::copy_dir_recursive(src, dest),
         };
@@ -72,6 +72,23 @@ pub fn execute(names: Option<Vec<String>>) -> Result<(), String> {
     let repo_config = RepoConfig::from_user_cfg(&user_config)?;
     let names: HashSet<String> = names.map(|n| n.into_iter().collect()).unwrap_or_default();
     let is_empty = names.is_empty();
+
+    // Windows 下创建符号链接需要管理员权限，若有 Soft 链接则尝试提权重启自身
+    #[cfg(windows)]
+    {
+        let needs_admin = repo_config
+            .apps
+            .iter()
+            .filter(|app| is_empty || names.contains(&app.name))
+            .any(|app| app.link_mode == LinkMode::Soft);
+        if needs_admin && !utils::is_elevated() {
+            let args: Vec<String> = std::env::args().skip(1).collect();
+            let args_refs: Vec<&str> = args.iter().map(String::as_str).collect();
+            utils::elevate(&args_refs)?;
+            return Ok(());
+        }
+    }
+
     let apps = repo_config.apps.iter().filter(|app| is_empty || names.contains(&app.name));
     let mut apps = apps.peekable();
     if apps.peek().is_none() {

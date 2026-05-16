@@ -107,6 +107,7 @@ dest_path_win = "$APPDATA/Zed"
 | `name`             | 软件名称                                             |
 | `src_path`         | 配置文件在仓库中的相对路径                           |
 | `link_mode`        | 链接模式：`soft`(软链接)、`hard`(硬链接)、`cp`(复制) |
+| `link_mode_unix`   | 同 `link_mode`， unix 平台有优先使用此字段           |
 | `dest_path`        | 通用配置路径                                         |
 | `dest_path_unix`   | Unix 系统配置路径                                    |
 | `dest_path_win`    | Windows 配置路径                                     |
@@ -116,7 +117,7 @@ dest_path_win = "$APPDATA/Zed"
 
 | 模式   | 说明                                                |
 | ------ | --------------------------------------------------- |
-| `soft` | 软链接，Windows 目录使用 Junction（无需管理员权限） |
+| `soft` | 软链接，Windows需要管理员权限，会尝试自动提权 |
 | `hard` | 硬链接，仅支持文件                                  |
 | `cp`   | 复制文件，适合不支持链接的场景                      |
 

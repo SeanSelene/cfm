@@ -15,4 +15,13 @@ which = "8"
 
 [target.'cfg(windows)'.dependencies]
 junction = "1"
-winapi = { version = "0.3", features = ["fileapi", "winbase"] }
+winapi = { version = "0.3", features = [
+    "winbase",
+    "shellapi",
+    "winuser",
+    "synchapi",
+    "processthreadsapi",
+    "securitybaseapi",
+    "handleapi",
+    "winnt",
+] }

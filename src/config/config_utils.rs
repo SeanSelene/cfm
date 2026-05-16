@@ -13,9 +13,6 @@ pub fn common_check(
     if !src_path.exists() {
         return Err(ConfigError::SrcNotExist(src_path.to_path_buf()));
     }
-    if src_path.is_file() && config.link_mode == LinkMode::Soft {
-        return Err(ConfigError::SoftFile);
-    }
     if src_path.is_dir() && config.link_mode == LinkMode::Hard {
         return Err(ConfigError::HardDir);
     }

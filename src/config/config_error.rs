@@ -8,8 +8,6 @@ pub enum ConfigError {
     DestExist { dest_path: PathBuf, src_path: PathBuf },
     #[error("源路径不存在")]
     SrcNotExist(PathBuf),
-    #[error("暂不支持软连接文件")]
-    SoftFile,
     #[error("仅能硬链接文件")]
     HardDir,
     #[error("IO 错误: {0}")]
